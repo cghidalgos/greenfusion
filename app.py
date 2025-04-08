@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for
 import openai
 import markdown
+import os
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
-openai.api_key = "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"
-
+load_dotenv()
+api_key = os.getenv("API_KEY")
 
 def generar_prompt(material, cantidad, precio, origen):
     return (
