@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Evaluador de Materiales</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .form-container {
+      background-color: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+    .title {
+      color: #007bff;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container mt-5">
+  <div class="form-container">
+    <h2 class="mb-4 title">Evaluador de Materiales</h2>
+
+    {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+      <div class="form-group">
+        <label>Nombre del Material</label>
+        <input type="text" name="material" class="form-control" placeholder="Ej: Madera reciclada" required>
+      </div>
+      <div class="form-group">
+        <label>Cantidad usada</label>
+        <input type="number" name="cantidad" step="any" class="form-control" placeholder="Ej: 50">
+      </div>
+      <div class="form-group">
+        <label>Precio por unidad (COP)</label>
+        <input type="number" name="precio" step="any" class="form-control" placeholder="Ej: 1200">
+      </div>
+      <div class="form-group">
+        <label>Lugar de origen</label>
+        <input type="text" name="origen" class="form-control" placeholder="Ej: Cali Colombia">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Obtener Recomendación</button>
+    </form>
+
+    {% if resultado_html %}
+      <div class="mt-5">
+        <h4 class="mb-3">💡 Recomendación de GreenFusion:</h4>
+        <div class="card shadow-sm">
+          <div class="card-body">
+            {{ resultado_html | safe }}
+          </div>
+        </div>
+
+        <form method="POST" action="/descargar">
+          <input type="hidden" name="resultado_html" value="{{ resultado_html | tojson | safe }}">
+          <button type="submit" class="btn btn-success mt-3">📄 Descargar como PDF</button>
+        </form>
+
+        <canvas id="graficoAhorro" width="400" height="200" class="mt-4"></canvas>
+
+        <div class="mt-4 d-flex justify-content-between">
+          <form method="POST" action="/nueva_recomendacion">
+            <input type="hidden" name="material" value="{{ material }}">
+            <input type="hidden" name="cantidad" value="{{ cantidad }}">
+            <input type="hidden" name="precio" value="{{ precio }}">
+            <input type="hidden" name="origen" value="{{ origen }}">
+            <button type="submit" class="btn btn-danger">❌ No, dame otra opción</button>
+          </form>
+
+          <a href="https://www.jdoodle.com/" target="_blank" class="btn btn-primary">✅ Sí, usar este material</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  {% if cantidad and precio %}
+  var ctx = document.getElementById('graficoAhorro').getContext('2d');
+  var actual = {{ cantidad }} * {{ precio }};
+  var recomendado = actual * 0.7;
+
+  new Chart(ctx, {
+      type: 'bar',
+      data: {
+          labels: ['Material actual', 'Material recomendado'],
+          datasets: [{
+              label: 'Costo total (COP)',
+              data: [actual, recomendado],
+              backgroundColor: ['#dc3545', '#28a745']
+          }]
+      },
+      options: {
+          title: {
+              display: true,
+              text: 'Comparación de Costos'
+          }
+      }
+  });
+  {% endif %}
+</script>
+
+</body>
+</html>
