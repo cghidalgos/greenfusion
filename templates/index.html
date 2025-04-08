@@ -4,8 +4,12 @@
   <meta charset="utf-8">
   <title>Evaluador de Materiales</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
+  
+  <!-- Bootstrap 4 -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     body {
       background-color: #f8f9fa;
@@ -33,20 +37,20 @@
 
     <form method="POST">
       <div class="form-group">
-        <label>Nombre del Material</label>
+        <label>Nombre del Material <small class="text-muted">(¿Qué estás usando actualmente?)</small></label>
         <input type="text" name="material" class="form-control" placeholder="Ej: Madera reciclada" required>
       </div>
       <div class="form-group">
         <label>Cantidad usada</label>
-        <input type="number" name="cantidad" step="any" class="form-control" placeholder="Ej: 50">
+        <input type="number" name="cantidad" step="any" class="form-control" placeholder="Ej: 50" required>
       </div>
       <div class="form-group">
         <label>Precio por unidad (COP)</label>
-        <input type="number" name="precio" step="any" class="form-control" placeholder="Ej: 1200">
+        <input type="number" name="precio" step="any" class="form-control" placeholder="Ej: 1200" required>
       </div>
       <div class="form-group">
         <label>Lugar de origen</label>
-        <input type="text" name="origen" class="form-control" placeholder="Ej: Cali Colombia">
+        <input type="text" name="origen" class="form-control" placeholder="Ej: Cali Colombia" required>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Obtener Recomendación</button>
     </form>
@@ -60,55 +64,55 @@
           </div>
         </div>
 
-        <form method="POST" action="/descargar">
-          <input type="hidden" name="resultado_html" value="{{ resultado_html | tojson | safe }}">
-          <button type="submit" class="btn btn-success mt-3">📄 Descargar como PDF</button>
-        </form>
+        <!-- Simulación de ahorro estimado -->
+        <div class="mt-5">
+          <h5>📉 Ahorro estimado (simulado)</h5>
+          <canvas id="ahorroChart" width="100%" height="40"></canvas>
+          <script>
+            const cantidad = {{ datos.cantidad if datos and datos.cantidad else 0 }};
+            const precio = {{ datos.precio if datos and datos.precio else 0 }};
+            const precioTotal = cantidad * precio;
+            const ahorro = precioTotal * 0.25;
 
-        <canvas id="graficoAhorro" width="400" height="200" class="mt-4"></canvas>
+            const ctx = document.getElementById('ahorroChart').getContext('2d');
+            new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: ['Costo Actual', 'Costo Estimado Alternativo'],
+                datasets: [{
+                  label: 'Costo (COP)',
+                  data: [precioTotal, precioTotal - ahorro],
+                  backgroundColor: ['#dc3545', '#28a745']
+                }]
+              },
+              options: {
+                responsive: true,
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
+              }
+            });
+          </script>
+        </div>
 
-        <div class="mt-4 d-flex justify-content-between">
-          <form method="POST" action="/nueva_recomendacion">
-            <input type="hidden" name="material" value="{{ material }}">
-            <input type="hidden" name="cantidad" value="{{ cantidad }}">
-            <input type="hidden" name="precio" value="{{ precio }}">
-            <input type="hidden" name="origen" value="{{ origen }}">
-            <button type="submit" class="btn btn-danger">❌ No, dame otra opción</button>
+        <!-- Botones Sí / No -->
+        <div class="mt-4 text-center">
+          <p>¿Te gustaría aceptar esta recomendación?</p>
+          <a href="{{ url_for('ir_a_jdoodle') }}" class="btn btn-success mr-2">Sí</a>
+          <form method="POST" action="{{ url_for('nueva_recomendacion') }}" style="display:inline;">
+            <button type="submit" class="btn btn-danger">No</button>
           </form>
-
-          <a href="https://www.jdoodle.com/" target="_blank" class="btn btn-primary">✅ Sí, usar este material</a>
         </div>
       </div>
     {% endif %}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  {% if cantidad and precio %}
-  var ctx = document.getElementById('graficoAhorro').getContext('2d');
-  var actual = {{ cantidad }} * {{ precio }};
-  var recomendado = actual * 0.7;
-
-  new Chart(ctx, {
-      type: 'bar',
-      data: {
-          labels: ['Material actual', 'Material recomendado'],
-          datasets: [{
-              label: 'Costo total (COP)',
-              data: [actual, recomendado],
-              backgroundColor: ['#dc3545', '#28a745']
-          }]
-      },
-      options: {
-          title: {
-              display: true,
-              text: 'Comparación de Costos'
-          }
-      }
-  });
-  {% endif %}
-</script>
+<!-- Bootstrap JS (opcional) -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
 </body>
 </html>
