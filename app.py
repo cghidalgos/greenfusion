@@ -1,9 +1,6 @@
-from flask import Flask, render_template, request, send_file, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for
 import openai
 import markdown
-import os
-from xhtml2pdf import pisa
-from io import BytesIO
 
 app = Flask(__name__)
 
@@ -46,7 +43,6 @@ def index():
             resultado_md = respuesta['choices'][0]['message']['content'].strip()
             resultado_html = markdown.markdown(resultado_md)
 
-            # Guardamos datos para pasarlos al template
             datos = {
                 "material": material,
                 "cantidad": cantidad,
@@ -60,19 +56,8 @@ def index():
 
     return render_template("index.html", resultado_html=resultado_html, error=error, datos=datos)
 
-@app.route("/descargar_pdf", methods=["POST"])
-def descargar_pdf():
-    resultado_html = request.form["resultado_html"]
-    html = render_template("pdf_template.html", contenido=resultado_html)
-
-    pdf_stream = BytesIO()
-    pisa.CreatePDF(src=html, dest=pdf_stream)
-    pdf_stream.seek(0)
-    return send_file(pdf_stream, as_attachment=True, download_name="recomendacion.pdf", mimetype="application/pdf")
-
 @app.route("/nueva_recomendacion", methods=["POST"])
 def nueva_recomendacion():
-    # Aquí podrías reutilizar el mismo prompt o hacerlo más complejo
     return redirect(url_for("index"))
 
 @app.route("/ir_a_jdoodle")
